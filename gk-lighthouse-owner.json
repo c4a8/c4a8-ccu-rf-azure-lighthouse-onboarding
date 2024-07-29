@@ -38,12 +38,12 @@
         "authorizations": [
                 { 
                     "principalId": "[parameters('OwnerPrincipalID')]", 
-                    "roleDefinitionId": "8e3af657-a8ff-443c-a75c-2fe8c4bcb635",
-                    "principalIdDisplayName": "GK Azure Lighthouse Owner" 
+                    "roleDefinitionId": "b24988ac-6180-42a0-ab88-20f7382dd24c",
+                    "principalIdDisplayName": "GK RF Azure Lighthouse Contributor" 
                 },                { 
                     "principalId": "[parameters('OwnerPrincipalID')]", 
-                    "roleDefinitionId": "91c1777a-f3dc-4fae-b103-61d183457e46",
-                    "principalIdDisplayName": "Remove GK Azure Lighthouse Delegation" 
+                    "roleDefinitionId": "92aaf0da-9dab-42b6-94a3-d43ce8d16293",
+                    "principalIdDisplayName": "GK RF Azure Lighthouse Log Analytics Contributor" 
                 }
 
             ]
