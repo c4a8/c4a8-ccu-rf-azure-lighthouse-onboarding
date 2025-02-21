@@ -20,14 +20,14 @@
         "managedByTenantId": {
             "type": "string",
             "metadata": {
-                "description": "Tenant ID provided by GKGAB"
+                "description": "Tenant ID provided by GK"
             },
             "defaultValue": "xxxx-xxxx-xxxx-xxxx-xxxx"
         },
         "OwnerPrincipalID": {
             "type": "string",
             "metadata": {
-                "description": "Object ID of Owner Group provided by GKGAB"
+                "description": "Object ID of Contributor Group provided by GK"
             },
             "defaultValue": "xxxx-xxxx-xxxx-xxxx-xxxx"
         }            
@@ -43,7 +43,7 @@
                 },                { 
                     "principalId": "[parameters('OwnerPrincipalID')]", 
                     "roleDefinitionId": "92aaf0da-9dab-42b6-94a3-d43ce8d16293",
-                    "principalIdDisplayName": "GK RF Azure Lighthouse Log Analytics Contributor" 
+                    "principalIdDisplayName": " RF Azure Lighthouse Log Analytics Contributor" 
                 }
 
             ]
