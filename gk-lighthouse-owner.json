@@ -15,7 +15,7 @@
             "metadata": {
                 "description": "Name of the Managed Service Provider offering"
             },
-            "defaultValue": "The solution will grant glueckkanja AG following RBAC role to your subscribtion: Owner - GK Azure Lighthouse Owner (covered by PIM)"
+            "defaultValue": "The solution will grant glueckkanja AG following RBAC role to your subscribtion: Contributor - GK Azure Lighthouse (and LogAnalytics Contributor, Key Vault Administraor)"
         },
         "managedByTenantId": {
             "type": "string",
@@ -39,15 +39,24 @@
                 { 
                     "principalId": "[parameters('OwnerPrincipalID')]", 
                     "roleDefinitionId": "b24988ac-6180-42a0-ab88-20f7382dd24c",
-                    "principalIdDisplayName": "GK RF Azure Lighthouse Contributor" 
-                },                { 
+                    "principalIdDisplayName": "RF Azure Lighthouse Contributor" 
+                },
+                { 
                     "principalId": "[parameters('OwnerPrincipalID')]", 
                     "roleDefinitionId": "92aaf0da-9dab-42b6-94a3-d43ce8d16293",
-                    "principalIdDisplayName": " RF Azure Lighthouse Log Analytics Contributor" 
+                    "principalIdDisplayName": "RF Azure Lighthouse Log Analytics Contributor" 
+                },
+                {
+                    "roleDefinitionId": "18d7d88d-d35e-4fb5-a5c3-7773c20a72d9",
+                    "principalIdDisplayName": "RF Azure Lighthouse User Access Administrator",
+                    "delegatedRoleDefinitionIds": [
+                         "b24988ac-6180-42a0-ab88-20f7382dd24c",
+                         "92aaf0da-9dab-42b6-94a3-d43ce8d16293",
+                         "00482a5a-887f-4fb3-b363-3b7fe8e74483",
+                         "4633458b-17de-408a-b874-0445c86b69e6"
+                    ]
                 }
-
             ]
-
     },
     "resources": [
         {
