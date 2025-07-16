@@ -1,0 +1,188 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "mspOfferName": {
+            "type": "string",
+            "metadata": {
+                "description": "Specify a unique name for your offer"
+            },
+            "defaultValue": "GK Reporting Foundation Service - Access privileges"
+
+        },
+        "mspOfferDescription": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Managed Service Provider offering"
+            },
+            "defaultValue": "The solution will grant glueckkanja AG following RBAC role to your subscribtion: Contributor - GK Azure Lighthouse"
+        },
+        "managedByTenantId": {
+            "type": "string",
+            "metadata": {
+                "description": "Tenant ID provided by GK"
+            },
+            "defaultValue": "xxxx-xxxx-xxxx-xxxx-xxxx"
+        },
+        "OwnerPrincipalID": {
+            "type": "string",
+            "metadata": {
+                "description": "Object ID of Contributor Group provided by GK"
+            },
+            "defaultValue": "xxxx-xxxx-xxxx-xxxx-xxxx"
+        },
+        "resourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the resource group where the managed identity will be deployed"
+            },
+            "defaultValue": "RG-ReportingFoundation"
+        },
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Location for the managed identity resource"
+            },
+            "defaultValue": "[resourceGroup().location]"
+        },
+        "managedIdentityName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the user managed identity"
+            },
+            "defaultValue": "mi-reportingfoundation"
+        },
+        "reportingFoundationSubscriptionId": {
+            "type": "string",
+            "metadata": {
+                "description": "Subscription ID for the Reporting Foundation"
+            },
+            "defaultValue": "[subscription().subscriptionId]"
+        }
+    },
+    "variables": {
+        "mspRegistrationName": "[guid(parameters('mspOfferName'))]",
+        "mspAssignmentName": "[guid(parameters('mspOfferName'))]",
+        "keyVaultDataAdminRoleId": "b86a8fe4-44ce-4948-aee5-eccb2c155cd7",
+        "authorizations": [
+                { 
+                    "principalId": "[parameters('OwnerPrincipalID')]", 
+                    "roleDefinitionId": "b24988ac-6180-42a0-ab88-20f7382dd24c",
+                    "principalIdDisplayName": "RF Azure Lighthouse Contributor" 
+                }
+            ]
+    },
+    "resources": [
+        {
+            "type": "Microsoft.ManagedServices/registrationDefinitions",
+            "apiVersion": "2019-09-01",
+            "name": "[variables('mspRegistrationName')]",
+            "properties": {
+                "registrationDefinitionName": "[parameters('mspOfferName')]",
+                "description": "[parameters('mspOfferDescription')]",
+                "managedByTenantId": "[parameters('managedByTenantId')]",
+                "authorizations": "[variables('authorizations')]"
+            }
+        },
+        {
+            "type": "Microsoft.ManagedServices/registrationAssignments",
+            "apiVersion": "2019-09-01",
+            "name": "[variables('mspAssignmentName')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ManagedServices/registrationDefinitions/', variables('mspRegistrationName'))]"
+            ],
+            "properties": {
+                "registrationDefinitionId": "[resourceId('Microsoft.ManagedServices/registrationDefinitions/', variables('mspRegistrationName'))]"
+            }
+        },
+        {
+            "type": "Microsoft.Resources/resourceGroups",
+            "apiVersion": "2021-04-01",
+            "name": "[parameters('resourceGroupName')]",
+            "location": "[parameters('location')]",
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "name": "deployManagedIdentity",
+            "resourceGroup": "[parameters('resourceGroupName')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/resourceGroups/', parameters('resourceGroupName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": [
+                        {
+                            "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+                            "apiVersion": "2018-11-30",
+                            "name": "[parameters('managedIdentityName')]",
+                            "location": "[parameters('location')]"
+                        }
+                    ],
+                    "outputs": {
+                        "managedIdentityId": {
+                            "type": "string",
+                            "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentityName'))]"
+                        },
+                        "managedIdentityPrincipalId": {
+                            "type": "string",
+                            "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentityName')), '2018-11-30').principalId]"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "name": "assignKeyVaultDataAdminRole",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'deployManagedIdentity')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": [
+                        {
+                            "type": "Microsoft.Authorization/roleAssignments",
+                            "apiVersion": "2020-04-01-preview",
+                            "name": "[guid(subscription().id, parameters('managedIdentityName'), variables('keyVaultDataAdminRoleId'))]",
+                            "properties": {
+                                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('keyVaultDataAdminRoleId'))]",
+                                "principalId": "[reference('deployManagedIdentity').outputs.managedIdentityPrincipalId.value]",
+                                "principalType": "ServicePrincipal"
+                            }
+                        }
+                    ]
+                },
+                "expressionEvaluationOptions": {
+                    "scope": "Outer"
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "mspOfferName": {
+            "type": "string",
+            "value": "[concat('Managed by', ' ', parameters('mspOfferName'))]"
+        },
+        "authorizations": {
+            "type": "array",
+            "value": "[variables('authorizations')]"
+        },
+        "managedIdentityId": {
+            "type": "string",
+            "value": "[reference('deployManagedIdentity').outputs.managedIdentityId.value]"
+        },
+        "managedIdentityPrincipalId": {
+            "type": "string",
+            "value": "[reference('deployManagedIdentity').outputs.managedIdentityPrincipalId.value]"
+        }
+    }
+}
