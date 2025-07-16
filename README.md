@@ -23,7 +23,7 @@ When you deploy this template, it will:
 
 1. Create a temporary resource group and deploy a user-assigned managed identity in it
 2. Assign the Key Vault Data Administrator role to the managed identity at the subscription scope
-3. Register your subscription with Azure Lighthouse for GK management only after the managed identity is configured
+3. Register your subscription with Azure Lighthouse for GK management after the managed identity is configured
 4. Output the resource IDs and principal IDs for future reference
 
 ## Parameters
@@ -65,43 +65,3 @@ The user deploying this template must have the following roles:
 1. Click the "Deploy to Azure" button above
 2. Fill in the required parameters with the values provided by GK
 3. Review and create the deployment
-
-## Template Structure and Implementation
-
-The template has been structured to ensure reliable deployment across different environments. Here's how it works:
-
-1. **Resource Group Creation**:
-   - Creates a temporary resource group to contain the managed identity
-
-2. **Three-Phase Deployment Approach**:
-   - First deployment (`identityDeployment`): Creates the user-assigned managed identity in the resource group
-   - Second deployment (`roleAssignment`): Assigns the Key Vault Data Administrator role to the managed identity at the subscription level
-   - Third deployment (`lighthouseDeployment`): Registers your subscription with Azure Lighthouse for GK management only after the managed identity has been properly configured
-
-3. **Dependency Chain**:
-   - The Lighthouse registration is deliberately made dependent on the role assignment deployment
-   - This ensures that the managed identity is fully configured before granting GK access to your subscription
-   - This sequence provides assurance that all required resources are properly set up before external access is granted
-
-4. **Properly Scoped References**:
-   - Uses nested deployments to handle resource group and subscription-level resources
-   - Implements proper expression evaluation scope for nested templates
-   - Maintains proper dependencies between resources
-
-This approach ensures that resources are created in the correct order and that references between resources are properly resolved during deployment.
-
-## Important Note on Deployment Sequence
-
-This template has been structured to make the Azure Lighthouse onboarding dependent on the successful deployment of the managed identity and its role assignment. This means:
-
-1. **Benefits**:
-   - Ensures that all resources are properly deployed and configured before granting GK access
-   - Provides a checkpoint that verifies all permissions are correctly set up
-   - Follows a principle of setting up internal resources before enabling external access
-
-2. **Potential Considerations**:
-   - If the managed identity creation or role assignment fails, the Lighthouse onboarding will not proceed
-   - This is a deliberate safeguard to ensure that deployments are all-or-nothing
-   - For troubleshooting, check deployment logs for the identity and role assignment steps first
-
-This sequence was chosen to ensure that your environment is fully prepared before external management access is granted.
