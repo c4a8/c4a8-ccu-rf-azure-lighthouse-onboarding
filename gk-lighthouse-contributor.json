@@ -19,9 +19,9 @@
         "resourceGroupName": {
             "type": "string",
             "metadata": {
-                "description": "Name of the existing resource group where the managed identity will be deployed",
-                "strongType": "existingResourceGroupName"
-            }
+                "description": "Name of the resource group where the managed identity will be deployed"
+            },
+            "defaultValue": "RG-ReportingFoundation"
         },
         "managedIdentityName": {
             "type": "string",
@@ -34,7 +34,7 @@
     "variables": {
         "mspOfferName": "GK Reporting Foundation Service - Access privileges",
         "mspOfferDescription": "The solution will grant glueckkanja AG following RBAC role to your subscribtion: Contributor - GK Azure Lighthouse",
-        "location": "[resourceGroup(parameters('resourceGroupName')).location]",
+        "location": "[deployment().location]",
         "reportingFoundationSubscriptionId": "[subscription().subscriptionId]",
         "mspRegistrationName": "[guid(variables('mspOfferName'))]",
         "mspAssignmentName": "[guid(variables('mspOfferName'))]",
@@ -71,10 +71,20 @@
             }
         },
         {
+            "type": "Microsoft.Resources/resourceGroups",
+            "apiVersion": "2021-04-01",
+            "name": "[parameters('resourceGroupName')]",
+            "location": "[deployment().location]",
+            "properties": {}
+        },
+        {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2021-04-01",
             "name": "deployManagedIdentity",
             "resourceGroup": "[parameters('resourceGroupName')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/resourceGroups/', parameters('resourceGroupName'))]"
+            ],
             "properties": {
                 "mode": "Incremental",
                 "template": {
@@ -135,7 +145,7 @@
     "outputs": {
         "mspOfferName": {
             "type": "string",
-            "value": "[concat('Managed by', ' ', parameters('mspOfferName'))]"
+            "value": "[concat('Managed by', ' ', variables('mspOfferName'))]"
         },
         "authorizations": {
             "type": "array",
