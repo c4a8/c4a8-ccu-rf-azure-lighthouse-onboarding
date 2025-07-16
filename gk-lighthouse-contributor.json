@@ -48,25 +48,49 @@
     },
     "resources": [
         {
-            "type": "Microsoft.ManagedServices/registrationDefinitions",
-            "apiVersion": "2019-09-01",
-            "name": "[variables('mspRegistrationName')]",
-            "properties": {
-                "registrationDefinitionName": "[variables('mspOfferName')]",
-                "description": "[variables('mspOfferDescription')]",
-                "managedByTenantId": "[parameters('managedByTenantId')]",
-                "authorizations": "[variables('authorizations')]"
-            }
-        },
-        {
-            "type": "Microsoft.ManagedServices/registrationAssignments",
-            "apiVersion": "2019-09-01",
-            "name": "[variables('mspAssignmentName')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "name": "lighthouseDeployment",
+            "location": "[variables('location')]",
             "dependsOn": [
-                "[resourceId('Microsoft.ManagedServices/registrationDefinitions/', variables('mspRegistrationName'))]"
+                "roleAssignment"
             ],
             "properties": {
-                "registrationDefinitionId": "[resourceId('Microsoft.ManagedServices/registrationDefinitions/', variables('mspRegistrationName'))]"
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": [
+                        {
+                            "type": "Microsoft.ManagedServices/registrationDefinitions",
+                            "apiVersion": "2019-09-01",
+                            "name": "[variables('mspRegistrationName')]",
+                            "properties": {
+                                "registrationDefinitionName": "[variables('mspOfferName')]",
+                                "description": "[variables('mspOfferDescription')]",
+                                "managedByTenantId": "[parameters('managedByTenantId')]",
+                                "authorizations": "[variables('authorizations')]"
+                            }
+                        },
+                        {
+                            "type": "Microsoft.ManagedServices/registrationAssignments",
+                            "apiVersion": "2019-09-01",
+                            "name": "[variables('mspAssignmentName')]",
+                            "dependsOn": [
+                                "[resourceId('Microsoft.ManagedServices/registrationDefinitions/', variables('mspRegistrationName'))]"
+                            ],
+                            "properties": {
+                                "registrationDefinitionId": "[resourceId('Microsoft.ManagedServices/registrationDefinitions/', variables('mspRegistrationName'))]"
+                            }
+                        }
+                    ],
+                    "outputs": {
+                        "registrationId": {
+                            "type": "string",
+                            "value": "[resourceId('Microsoft.ManagedServices/registrationDefinitions/', variables('mspRegistrationName'))]"
+                        }
+                    }
+                }
             }
         },
         {
@@ -145,12 +169,13 @@
                     "resources": [
                         {
                             "type": "Microsoft.Authorization/roleAssignments",
-                            "apiVersion": "2020-04-01-preview",
-                            "name": "[guid(subscription().id, variables('keyVaultDataAdminRoleId'), parameters('managedIdentityName'))]",
+                            "apiVersion": "2022-04-01",
+                            "name": "[guid(subscription().id, reference('identityDeployment').outputs.principalId.value, variables('keyVaultDataAdminRoleId'))]",
                             "properties": {
                                 "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('keyVaultDataAdminRoleId'))]",
                                 "principalId": "[reference('identityDeployment').outputs.principalId.value]",
-                                "principalType": "ServicePrincipal"
+                                "principalType": "ServicePrincipal",
+                                "scope": "[subscription().id]"
                             }
                         }
                     ]
@@ -166,6 +191,10 @@
         "authorizations": {
             "type": "array",
             "value": "[variables('authorizations')]"
+        },
+        "registrationDefinitionId": {
+            "type": "string",
+            "value": "[reference('lighthouseDeployment').outputs.registrationId.value]"
         },
         "managedIdentityResourceId": {
             "type": "string",
