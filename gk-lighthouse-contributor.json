@@ -2,21 +2,6 @@
     "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "mspOfferName": {
-            "type": "string",
-            "metadata": {
-                "description": "Specify a unique name for your offer"
-            },
-            "defaultValue": "GK Reporting Foundation Service - Access privileges"
-
-        },
-        "mspOfferDescription": {
-            "type": "string",
-            "metadata": {
-                "description": "Name of the Managed Service Provider offering"
-            },
-            "defaultValue": "The solution will grant glueckkanja AG following RBAC role to your subscribtion: Contributor - GK Azure Lighthouse"
-        },
         "managedByTenantId": {
             "type": "string",
             "metadata": {
@@ -34,16 +19,9 @@
         "resourceGroupName": {
             "type": "string",
             "metadata": {
-                "description": "Name of the resource group where the managed identity will be deployed"
-            },
-            "defaultValue": "RG-ReportingFoundation"
-        },
-        "location": {
-            "type": "string",
-            "metadata": {
-                "description": "Location for the managed identity resource"
-            },
-            "defaultValue": "[resourceGroup().location]"
+                "description": "Name of the existing resource group where the managed identity will be deployed",
+                "strongType": "existingResourceGroupName"
+            }
         },
         "managedIdentityName": {
             "type": "string",
@@ -51,18 +29,15 @@
                 "description": "Name of the user managed identity"
             },
             "defaultValue": "mi-reportingfoundation"
-        },
-        "reportingFoundationSubscriptionId": {
-            "type": "string",
-            "metadata": {
-                "description": "Subscription ID for the Reporting Foundation"
-            },
-            "defaultValue": "[subscription().subscriptionId]"
         }
     },
     "variables": {
-        "mspRegistrationName": "[guid(parameters('mspOfferName'))]",
-        "mspAssignmentName": "[guid(parameters('mspOfferName'))]",
+        "mspOfferName": "GK Reporting Foundation Service - Access privileges",
+        "mspOfferDescription": "The solution will grant glueckkanja AG following RBAC role to your subscribtion: Contributor - GK Azure Lighthouse",
+        "location": "[resourceGroup(parameters('resourceGroupName')).location]",
+        "reportingFoundationSubscriptionId": "[subscription().subscriptionId]",
+        "mspRegistrationName": "[guid(variables('mspOfferName'))]",
+        "mspAssignmentName": "[guid(variables('mspOfferName'))]",
         "keyVaultDataAdminRoleId": "b86a8fe4-44ce-4948-aee5-eccb2c155cd7",
         "authorizations": [
                 { 
@@ -78,8 +53,8 @@
             "apiVersion": "2019-09-01",
             "name": "[variables('mspRegistrationName')]",
             "properties": {
-                "registrationDefinitionName": "[parameters('mspOfferName')]",
-                "description": "[parameters('mspOfferDescription')]",
+                "registrationDefinitionName": "[variables('mspOfferName')]",
+                "description": "[variables('mspOfferDescription')]",
                 "managedByTenantId": "[parameters('managedByTenantId')]",
                 "authorizations": "[variables('authorizations')]"
             }
@@ -96,20 +71,10 @@
             }
         },
         {
-            "type": "Microsoft.Resources/resourceGroups",
-            "apiVersion": "2021-04-01",
-            "name": "[parameters('resourceGroupName')]",
-            "location": "[parameters('location')]",
-            "properties": {}
-        },
-        {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2021-04-01",
             "name": "deployManagedIdentity",
             "resourceGroup": "[parameters('resourceGroupName')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Resources/resourceGroups/', parameters('resourceGroupName'))]"
-            ],
             "properties": {
                 "mode": "Incremental",
                 "template": {
@@ -120,7 +85,7 @@
                             "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
                             "apiVersion": "2018-11-30",
                             "name": "[parameters('managedIdentityName')]",
-                            "location": "[parameters('location')]"
+                            "location": "[variables('location')]"
                         }
                     ],
                     "outputs": {

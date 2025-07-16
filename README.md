@@ -22,23 +22,29 @@ The template also deploys a user-assigned managed identity with the following ch
 When you deploy this template, it will:
 
 1. Register your subscription with Azure Lighthouse for GK management
-2. Create a new resource group (if it doesn't already exist)
-3. Create a user-assigned managed identity in that resource group
-4. Assign the Key Vault Data Administrator role to the managed identity at the subscription scope
-5. Output the resource IDs and principal IDs for future reference
+2. Create a user-assigned managed identity in your selected existing resource group
+3. Assign the Key Vault Data Administrator role to the managed identity at the subscription scope
+4. Output the resource IDs and principal IDs for future reference
 
 ## Parameters
 
 | Parameter Name | Description |
 |---------------|------------|
-| mspOfferName | Name of the Lighthouse offer |
-| mspOfferDescription | Description of the Lighthouse offer |
 | managedByTenantId | GK's Tenant ID (provided by GK) |
 | OwnerPrincipalID | Object ID of GK's Contributor Group (provided by GK) |
-| resourceGroupName | Name of the resource group for the managed identity |
-| location | Azure region for the resources |
+| resourceGroupName | Name of an existing resource group for the managed identity |
 | managedIdentityName | Name of the user-assigned managed identity |
-| reportingFoundationSubscriptionId | Subscription ID for the Reporting Foundation |
+
+## Fixed Values (Not Configurable)
+
+The following values are fixed in the template and cannot be changed:
+
+| Name | Value |
+|---------------|------------|
+| mspOfferName | GK Reporting Foundation Service - Access privileges |
+| mspOfferDescription | The solution will grant glueckkanja AG the Contributor role to your subscription |
+| location | Uses the location of the selected resource group |
+| reportingFoundationSubscriptionId | Uses the current subscription ID |
 
 ## Prerequisites
 
@@ -54,6 +60,7 @@ The user deploying this template must have the following roles:
 ### Required Information
 - GK's Tenant ID (provided by your GK contact)
 - GK's Contributor Group Object ID (provided by your GK contact)
+- An existing resource group where the managed identity will be deployed
 
 ### Deployment Process
 1. Click the "Deploy to Azure" button above
