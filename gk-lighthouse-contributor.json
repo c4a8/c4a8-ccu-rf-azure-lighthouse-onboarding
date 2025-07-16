@@ -37,7 +37,7 @@
         "location": "[deployment().location]",
         "mspRegistrationName": "[guid(variables('mspOfferName'))]",
         "mspAssignmentName": "[guid(variables('mspOfferName'))]",
-        "keyVaultDataAdminRoleId": "b86a8fe4-44ce-4948-aee5-eccb2c155cd7",
+        "keyVaultDataAdminRoleId": "8b54135c-b56d-4d72-a534-26097cfdc8d8",
         "authorizations": [
             { 
                 "principalId": "[parameters('OwnerPrincipalID')]", 
